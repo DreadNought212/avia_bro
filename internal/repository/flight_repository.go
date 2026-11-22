@@ -36,9 +36,12 @@ func (r *FlightRepository) UpsertFlight(ctx context.Context, flight *travelpayou
 			price_dropped
 		FROM common.upsert_flight(
 			$1, $2, $3, $4, $5, $6, $7, $8,
-			$9, $10, $11, $12, $13, $14, $15, $16
+		    $9, $10, $11, $12, $13, $14, $15,
+			$16, $17
 		)
 	`
+
+	isOneWay := flight.ReturnAt == nil
 
 	err = r.db.QueryRowContext(
 		ctx,
@@ -59,6 +62,7 @@ func (r *FlightRepository) UpsertFlight(ctx context.Context, flight *travelpayou
 		flight.Duration,
 		flight.Link,
 		flight.BookingLink,
+		isOneWay,
 	).Scan(
 		&result.IsNew,
 		&result.OldPrice,

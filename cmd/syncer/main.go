@@ -8,12 +8,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/lib/pq"
 
 	"github.com/DreadNought212/avia_bro/internal/external/travelpayouts"
 	"github.com/DreadNought212/avia_bro/internal/repository"
-	"github.com/DreadNought212/avia_bro/internal/scheduler"
 	"github.com/DreadNought212/avia_bro/internal/service"
 	"github.com/joho/godotenv"
 )
@@ -52,35 +52,54 @@ func main() {
 	// Инициализируем зависимости
 	apiClient := travelpayouts.NewClient(apiKey)
 	flightRepo := repository.NewFlightRepository(db)
-	routeRepo := repository.NewRouteRepository(db)
-	syncLogRepo := repository.NewSyncLogRepository(db)
-	notificationRuleRepo := repository.NewNotificationRuleRepository(db)
+	// routeRepo := repository.NewRouteRepository(db)
+	// syncLogRepo := repository.NewSyncLogRepository(db)
+	// notificationRuleRepo := repository.NewNotificationRuleRepository(db)
+	complexRouteRepo := repository.NewComplexRouteRepository(db)
 
-	syncService := service.NewFlightSyncService(
+	// syncService := service.NewFlightSyncService(
+	// 	apiClient,
+	// 	flightRepo,
+	// 	routeRepo,
+	// 	syncLogRepo,
+	// 	notificationRuleRepo,
+	// )
+
+	oneWayFlightSyncService := service.NewOneWayFlightSyncService(
 		apiClient,
 		flightRepo,
-		routeRepo,
-		syncLogRepo,
-		notificationRuleRepo,
+		complexRouteRepo,
 	)
-
-	scheduler := scheduler.NewScheduler(syncService, routeRepo)
 
 	ctx := context.Background()
 
-	// Первая синхронизация сразу после запуска
-	fmt.Println("\n🚀 Запускаем первоначальную синхронизацию...")
+	fmt.Println("\n✈️ Запускаем синхронизацию one-way билетов...")
 
-	err = scheduler.RunOnce(ctx)
+	err = oneWayFlightSyncService.SyncAll(
+		ctx,
+		time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2027, 04, 1, 0, 0, 0, 0, time.UTC),
+		"rub",
+	)
 	if err != nil {
-		log.Printf("❌ Ошибка первоначальной синхронизации: %v", err)
+		log.Printf("❌ Ошибка one-way синхронизации: %v", err)
 	}
 
-	// Запускаем scheduler
-	err = scheduler.Start(ctx)
-	if err != nil {
-		log.Fatalf("❌ Не удалось запустить scheduler: %v", err)
-	}
+	// scheduler := scheduler.NewScheduler(syncService, routeRepo)
+
+	// // Первая синхронизация сразу после запуска
+	// fmt.Println("\n🚀 Запускаем первоначальную синхронизацию...")
+
+	// err = scheduler.RunOnce(ctx)
+	// if err != nil {
+	// 	log.Printf("❌ Ошибка первоначальной синхронизации: %v", err)
+	// }
+
+	// // Запускаем scheduler
+	// err = scheduler.Start(ctx)
+	// if err != nil {
+	// 	log.Fatalf("❌ Не удалось запустить scheduler: %v", err)
+	// }
 
 	fmt.Println("\n✅ Сервис запущен и работает")
 	fmt.Println("📡 Мониторинг маршрутов активен")
@@ -93,6 +112,6 @@ func main() {
 	<-sigChan
 
 	fmt.Println("\n\n🛑 Получен сигнал остановки...")
-	scheduler.Stop()
+	//scheduler.Stop()
 	fmt.Println("👋 Сервис остановлен")
 }

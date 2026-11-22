@@ -93,18 +93,44 @@ func (c *Client) SearchFlights(
 	return c.doRequest(ctx, url)
 }
 
-// SearchFlightsFromOrigin ищет билеты только по origin (без destination)
-func (c *Client) SearchFlightsFromOrigin(
+// SearchFlightsFromOriginOneWay ищет билеты в одну сторону по origin + destination
+func (c *Client) SearchFlightsFromOriginOneWay_test(
 	ctx context.Context,
 	origin string,
+	destination string,
 	departureDate string,
 	currency string,
 ) ([]Flight, error) {
 
 	url := fmt.Sprintf(
-		"%s/grouped_prices?origin=%s&currency=%s&departure_at=%s&group_by=departure_at&token=%s",
+		"%s/prices_for_dates?origin=%s&destination=%s&currency=%s&departure_at=%s&token=%s",
 		c.baseURL,
 		origin,
+		destination,
+		currency,
+		departureDate,
+		c.apiKey,
+	)
+
+	fmt.Printf("🔍 Запрашиваю Travelpayouts API: только из %s\n", origin)
+
+	return c.doRequest(ctx, url)
+}
+
+// SearchFlightsFromOriginOneWay ищет билеты в одну сторону по origin + destination
+func (c *Client) SearchFlightsFromOriginOneWay(
+	ctx context.Context,
+	origin string,
+	destination string,
+	departureDate string,
+	currency string,
+) ([]Flight, error) {
+
+	url := fmt.Sprintf(
+		"%s/grouped_prices?origin=%s&destination=%s&currency=%s&departure_at=%s&group_by=departure_at&token=%s",
+		c.baseURL,
+		origin,
+		destination,
 		currency,
 		departureDate,
 		c.apiKey,
@@ -276,6 +302,88 @@ func (c *Client) SearchFlightsForDateRange(
 		} else {
 			allFlights = append(allFlights, flights2...)
 			//fmt.Printf("✅ %s → %s: найдено %d билетов\n", departureAt, returnAtNext, len(flights2))
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return allFlights, nil
+}
+
+func (c *Client) SearchFlightsForOneWayDateRange(
+	ctx context.Context,
+	origin string,
+	destination string,
+	startMonth time.Time,
+	endMonth time.Time,
+	currency string,
+) ([]Flight, error) {
+
+	var allFlights []Flight
+
+	for month := startMonth; !month.After(endMonth); month = month.AddDate(0, 1, 0) {
+
+		departureAt := month.Format("2006-01")
+
+		flights, err := c.SearchFlightsFromOriginOneWay(
+			ctx,
+			origin,
+			destination,
+			departureAt,
+			currency,
+		)
+
+		if err != nil {
+			fmt.Printf(
+				"⚠️ Ошибка для %s → %s, месяц %s: %v\n",
+				origin,
+				destination,
+				departureAt,
+				err,
+			)
+		} else {
+			allFlights = append(allFlights, flights...)
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return allFlights, nil
+}
+
+func (c *Client) SearchFlightsForOneWayDateRange_test(
+	ctx context.Context,
+	origin string,
+	destination string,
+	startMonth time.Time,
+	endMonth time.Time,
+	currency string,
+) ([]Flight, error) {
+
+	var allFlights []Flight
+
+	for month := startMonth; !month.After(endMonth); month = month.AddDate(0, 1, 0) {
+
+		departureAt := month.Format("2006-01")
+
+		flights, err := c.SearchFlightsFromOriginOneWay_test(
+			ctx,
+			origin,
+			destination,
+			departureAt,
+			currency,
+		)
+
+		if err != nil {
+			fmt.Printf(
+				"⚠️ Ошибка для %s → %s, месяц %s: %v\n",
+				origin,
+				destination,
+				departureAt,
+				err,
+			)
+		} else {
+			allFlights = append(allFlights, flights...)
 		}
 
 		time.Sleep(500 * time.Millisecond)

@@ -35,16 +35,23 @@ func NewFlightSyncService(
 
 // GenerateFlightKey создаёт уникальный ключ для билета
 func GenerateFlightKey(flight *travelpayouts.Flight) string {
-	returnAt := ""
-	if flight.ReturnAt != nil {
-		returnAt = flight.ReturnAt.Format(time.RFC3339)
+	if flight.ReturnAt == nil {
+		return fmt.Sprintf(
+			"oneway:%s:%s:%s:%s:%s",
+			flight.Origin,
+			flight.Destination,
+			flight.DepartureAt.Format(time.RFC3339),
+			flight.Airline,
+			flight.FlightNumber,
+		)
 	}
 
-	return fmt.Sprintf("%s:%s:%s:%s:%s:%s",
+	return fmt.Sprintf(
+		"roundtrip:%s:%s:%s:%s:%s:%s",
 		flight.Origin,
 		flight.Destination,
 		flight.DepartureAt.Format(time.RFC3339),
-		returnAt,
+		flight.ReturnAt.Format(time.RFC3339),
 		flight.Airline,
 		flight.FlightNumber,
 	)
