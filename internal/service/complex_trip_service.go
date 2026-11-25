@@ -174,6 +174,12 @@ func (s *ComplexTripService) fetchFlights(
 		domainFlights := make([]*domain.ComplexSearchFlight, 0, len(flights))
 
 		for _, flight := range flights {
+			airline := strings.ToUpper(strings.TrimSpace(flight.Airline))
+
+			if _, excluded := s.excludedAirlines[airline]; excluded {
+				continue
+			}
+
 			domainFlights = append(
 				domainFlights,
 				convertFlightToDomain(flight),

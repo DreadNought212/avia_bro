@@ -183,6 +183,17 @@ func combineFlights(
 		candidates := flightsByRoute[routeKey(origin, destination)]
 
 		for _, candidate := range candidates {
+			// Проверяем максимальное количество пересадок
+			// для текущего сегмента маршрута.
+			maxTransfers := params.FinalMaxTransfers
+
+			if segmentIndex < len(params.Stops) {
+				maxTransfers = params.Stops[segmentIndex].MaxTransfers
+			}
+
+			if candidate.Transfers > maxTransfers {
+				continue
+			}
 			// Первый перелёт должен попадать в заданный диапазон.
 			if segmentIndex == 0 {
 				if candidate.DepartureAt.Before(params.DepartureDateFrom) ||
