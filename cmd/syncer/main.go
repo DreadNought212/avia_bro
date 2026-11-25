@@ -77,8 +77,8 @@ func main() {
 
 	err = oneWayFlightSyncService.SyncAll(
 		ctx,
-		time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2027, 04, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2027, 07, 1, 0, 0, 0, 0, time.UTC),
 		"rub",
 	)
 	if err != nil {

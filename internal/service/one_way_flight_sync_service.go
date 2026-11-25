@@ -184,6 +184,7 @@ func (s *OneWayFlightSyncService) syncDirection(
 		destination,
 	)
 
+	// 1. Получаем билеты из API
 	flights, err := s.client.SearchFlightsForOneWayDateRange(
 		ctx,
 		origin,
@@ -208,8 +209,10 @@ func (s *OneWayFlightSyncService) syncDirection(
 		len(flights),
 	)
 
-	for i := range flights {
+	// 2. Сохраняем билеты и собираем их ключи
+	flightKeys := make([]string, 0, len(flights))
 
+	for i := range flights {
 		flight := &flights[i]
 
 		flightKey := GenerateFlightKey(flight)
@@ -227,7 +230,39 @@ func (s *OneWayFlightSyncService) syncDirection(
 				err,
 			)
 		}
+
+		flightKeys = append(flightKeys, flightKey)
 	}
+
+	// 3. Определяем границы периода синхронизации.
+	// endMonth включительно, поэтому верхняя граница — следующий месяц.
+	endDate := endMonth.AddDate(0, 1, 0)
+
+	// 4. Деактивируем билеты, которых нет в выгрузке
+	deactivatedCount, err := s.flightRepo.DeactivateFlightsNotInKeysInPeriod(
+		ctx,
+		origin,
+		destination,
+		flightKeys,
+		startMonth,
+		endDate,
+	)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to deactivate outdated flights %s → %s: %w",
+			origin,
+			destination,
+			err,
+		)
+	}
+
+	fmt.Printf(
+		"✅ %s → %s: сохранено %d, деактивировано %d\n",
+		origin,
+		destination,
+		len(flights),
+		deactivatedCount,
+	)
 
 	return nil
 }

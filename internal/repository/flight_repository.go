@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/DreadNought212/avia_bro/internal/external/travelpayouts"
+	"github.com/lib/pq"
 )
 
 type FlightRepository struct {
@@ -77,27 +78,66 @@ func (r *FlightRepository) UpsertFlight(ctx context.Context, flight *travelpayou
 	return result, nil
 }
 
-// DeactivateFlightsNotInKeys помечает билеты как неактивные если их нет в списке ключей
+func (r *FlightRepository) deactivateFlightsNotInKeys(
+	ctx context.Context,
+	origin, destination string,
+	flightKeys []string,
+	startDate, endDate *time.Time,
+) (int, error) {
+	query := `
+        UPDATE common.flights
+        SET
+            is_active = FALSE,
+            updated_at = NOW()
+        WHERE
+            origin = $1
+            AND destination = $2
+            AND is_active = TRUE
+            AND flight_key <> ALL($3::varchar[])
+    `
+
+	args := []any{origin, destination, pq.Array(flightKeys)}
+
+	if startDate != nil && endDate != nil {
+		query += `
+            AND departure_at >= $4
+            AND departure_at < $5
+        `
+		args = append(args, *startDate, *endDate)
+	}
+
+	result, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("deactivate outdated flights: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("get affected rows: %w", err)
+	}
+
+	return int(rowsAffected), nil
+}
+
 func (r *FlightRepository) DeactivateFlightsNotInKeys(
 	ctx context.Context,
 	origin, destination string,
 	flightKeys []string,
 ) (int, error) {
-	query := `
-		UPDATE common.flights
-		SET is_active = FALSE, updated_at = NOW()
-		WHERE origin = $1 AND destination = $2
-		  AND is_active = TRUE
-		  AND flight_key != ALL($3)
-	`
+	return r.deactivateFlightsNotInKeys(
+		ctx, origin, destination, flightKeys, nil, nil,
+	)
+}
 
-	result, err := r.db.ExecContext(ctx, query, origin, destination, flightKeys)
-	if err != nil {
-		return 0, fmt.Errorf("failed to deactivate flights: %w", err)
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	return int(rowsAffected), nil
+func (r *FlightRepository) DeactivateFlightsNotInKeysInPeriod(
+	ctx context.Context,
+	origin, destination string,
+	flightKeys []string,
+	startDate, endDate time.Time,
+) (int, error) {
+	return r.deactivateFlightsNotInKeys(
+		ctx, origin, destination, flightKeys, &startDate, &endDate,
+	)
 }
 
 // GetNewFlights получает новые билеты за последний период

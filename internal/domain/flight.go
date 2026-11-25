@@ -7,10 +7,10 @@ import (
 // Flight представляет авиабилет
 type Flight struct {
 	ID              string    `db:"id"`
-	Origin          string    `db:"origin"`        // MOW, SPB, BCN, etc.
+	Origin          string    `db:"origin"` // MOW, SPB, BCN, etc.
 	Destination     string    `db:"destination"`
 	DepartDate      time.Time `db:"depart_date"`
-	Price           int64     `db:"price"`         // в копейках!
+	Price           int64     `db:"price"` // в копейках!
 	Airline         string    `db:"airline"`
 	DepartTime      time.Time `db:"depart_time"`
 	ArrivalTime     time.Time `db:"arrival_time"`

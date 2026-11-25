@@ -334,16 +334,16 @@ func (c *Client) SearchFlightsForOneWayDateRange(
 		)
 
 		if err != nil {
-			fmt.Printf(
-				"⚠️ Ошибка для %s → %s, месяц %s: %v\n",
+			return nil, fmt.Errorf(
+				"failed to fetch flights %s → %s for %s: %w",
 				origin,
 				destination,
 				departureAt,
 				err,
 			)
-		} else {
-			allFlights = append(allFlights, flights...)
 		}
+
+		allFlights = append(allFlights, flights...)
 
 		time.Sleep(500 * time.Millisecond)
 	}

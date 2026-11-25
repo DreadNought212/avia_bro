@@ -1,0 +1,219 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f4f6fa;
+  color: #202938;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 15px;
+  margin-bottom: 35px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #2563eb;
+}
+
+.header span {
+  color: #64748b;
+}
+
+.search-section,
+.trip-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.search-section h2,
+.results-section h2 {
+  margin-top: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+
+input,
+select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 14px;
+  color: #202938;
+  background: white;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid #bfdbfe;
+  border-color: #2563eb;
+}
+
+.search-button,
+.booking-button {
+  display: inline-block;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.search-button {
+  margin-top: 22px;
+}
+
+.search-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.results-section {
+  margin-top: 35px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.results-header span {
+  color: #64748b;
+}
+
+.trip-card {
+  margin-bottom: 16px;
+}
+
+.trip-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.trip-card-header strong {
+  font-size: 21px;
+  color: #2563eb;
+}
+
+.flight-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 18px 0;
+}
+
+.flight-direction {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.flight-direction strong {
+  font-size: 21px;
+}
+
+.flight-direction span,
+.flight-info span,
+.flight-direction small {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.flight-label {
+  color: #2563eb !important;
+  font-weight: 600;
+}
+
+.flight-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.flight-divider {
+  border-top: 1px dashed #cbd5e1;
+}
+
+.booking-button {
+  margin-top: 10px;
+}
+
+.empty-message {
+  color: #64748b;
+  text-align: center;
+  padding: 35px;
+}
+
+.error-message {
+  color: #dc2626;
+  padding: 15px;
+  background: #fee2e2;
+  border-radius: 7px;
+}
+
+@media (max-width: 750px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .flight-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .flight-info {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 450px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.booking-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
