@@ -8,13 +8,22 @@ import (
 	"github.com/DreadNought212/avia_bro/internal/service"
 )
 
-func NewRouter(tripService *service.TripService) http.Handler {
+func NewRouter(
+	tripService *service.TripService,
+	complexTripService *service.ComplexTripService,
+) http.Handler {
 	tripHandler := handler.NewTripHandler(tripService)
+	complexTripHandler := handler.NewComplexTripHandler(complexTripService)
 
 	mux := http.NewServeMux()
 
+	// Обычный поиск билетов
 	mux.HandleFunc("/api/v1/trips/search", tripHandler.Search)
 	mux.HandleFunc("/api/v1/trips/details", tripHandler.Details)
+
+	// Сложный многосегментный поиск
+	mux.HandleFunc("/api/v1/complex-trips/search", complexTripHandler.Search)
+	mux.HandleFunc("/api/v1/complex-trips/", complexTripHandler.Results)
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

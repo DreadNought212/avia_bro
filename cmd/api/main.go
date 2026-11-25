@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/DreadNought212/avia_bro/internal/api"
+	"github.com/DreadNought212/avia_bro/internal/external/travelpayouts"
 	"github.com/DreadNought212/avia_bro/internal/repository"
 	"github.com/DreadNought212/avia_bro/internal/service"
 )
@@ -25,10 +27,22 @@ func main() {
 		log.Fatal("DATABASE_URL is not set")
 	}
 
+	apiKey := os.Getenv("TRAVELPAYOUTS_API_KEY")
+	if apiKey == "" {
+		log.Fatal("TRAVELPAYOUTS_API_KEY is not set")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
+	excludedAirlinesEnv := os.Getenv("EXCLUDED_AIRLINES")
+	if excludedAirlinesEnv == "" {
+		excludedAirlinesEnv = "S7,DV"
+	}
+
+	excludedAirlines := strings.Split(excludedAirlinesEnv, ",")
 
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
@@ -47,10 +61,20 @@ func main() {
 		log.Fatalf("connect to database: %v", err)
 	}
 
+	// Обычный поиск билетов
 	tripRepository := repository.NewTripSearchRepository(db)
 	tripService := service.NewTripService(tripRepository)
 
-	router := api.NewRouter(tripService)
+	// Сложный многосегментный поиск
+	complexSearchRepository := repository.NewComplexSearchRepository(db)
+	travelpayoutsClient := travelpayouts.NewClient(apiKey)
+	complexTripService := service.NewComplexTripService(
+		complexSearchRepository,
+		travelpayoutsClient,
+		excludedAirlines,
+	)
+
+	router := api.NewRouter(tripService, complexTripService)
 	server := api.NewHTTPServer(port, router)
 
 	go func() {

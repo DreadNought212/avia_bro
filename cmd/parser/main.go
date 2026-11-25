@@ -95,7 +95,7 @@ func main() {
 	)
 
 	if err != nil {
-		fmt.Printf("⚠️  Ошибка при запросе %s → %s: %v\n", origin, err)
+		fmt.Printf("⚠️ Ошибка при запросе %s: %v\n", origin, err)
 	}
 
 	allFlights := []travelpayouts.Flight{}
